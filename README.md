@@ -28,8 +28,7 @@ Copy the repo to your PC and open the index.html
 
 ## :white_check_mark: Roadmap-of-future-improvements
 
-You don't need anything extra to play
-
+Add images to marker
 
 ## :memo: License
 
