@@ -46,7 +46,7 @@ async function getBusLocations(){
 async function run(){
   let func = await getPosition()
   if(func){
-    setInterval(move, 1000);
+    setInterval(move, 500);
   }
 }
 run()
