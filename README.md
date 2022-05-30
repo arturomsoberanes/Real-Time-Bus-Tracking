@@ -1,5 +1,5 @@
 <div align="center" id="top">
-  <img src="screenshot.png"  width="300" height="300">   
+  <img src="screenshot.png"  width="300">   
 </div>
 
 # <h1 align="center">The Real Time Bus Tracker</h1>
