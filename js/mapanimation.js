@@ -1,53 +1,86 @@
-const busStops = []
-mapboxgl.accessToken = 'pk.eyJ1IjoiYXJ0dXJvc29iZXJhbmVzIiwiYSI6ImNsMnpuaHE2bzBvb2QzYm93M3IyOWZwNTAifQ.o6ygyjfGXMzEZSfo8_jS1Q';
-let position = true;
+var map;
+var markers = [];
 
-let map = new mapboxgl.Map({
-  container: 'map',
-  style: 'mapbox://styles/mapbox/streets-v11',
-  center: [-71.104081, 42.365554],
-  zoom: 14,
-});
-
-let marker = new mapboxgl.Marker()
-    .setLngLat([-71.093729, 42.359244])
-    .addTo(map)
-
-let counter = 0;
-function move() {
-  if(counter < busStops.length){
-    marker.setLngLat(busStops[counter]);
-    counter++
-  }else{
-    counter = 0;
-  }
+// load map
+function init(){
+	var myOptions = {
+		zoom      : 14,
+		center    : { lat:42.353350,lng:-71.091525},
+		mapTypeId : google.maps.MapTypeId.ROADMAP
+	};
+	var element = document.getElementById('map');
+  	map = new google.maps.Map(element, myOptions);
+  	addMarkers();
 }
 
-async function getPosition(){
-  if (position){
-    const locations = await getBusLocations();
-    locations.forEach((item) =>{
-      let arrLocation = [item.attributes.longitude, item.attributes.latitude];
-      busStops.push(arrLocation);
-    });
-    position = false;
-    return true;
-  }
+// Add bus markers to map
+async function addMarkers(){
+	// get bus data
+	var locations = await getBusLocations();
+
+	// loop through data, add bus markers
+	locations.forEach(function(bus){
+		var marker = getMarker(bus.id);		
+		if (marker){
+			moveMarker(marker,bus);
+		}
+		else{
+			addMarker(bus);			
+		}
+	});
+
+	// timer
+	console.log(new Date());
+	setTimeout(addMarkers,15000);
 }
 
 // Request bus data from MBTA
 async function getBusLocations(){
-	const url = 'https://api-v3.mbta.com/vehicles?filter[route]=1&include=trip';
-	const response = await fetch(url);
-	const json     = await response.json();
+	var url = 'https://api-v3.mbta.com/vehicles?api_key=ca34f7b7ac8a445287cab52fb451030a&filter[route]=1&include=trip';	
+	var response = await fetch(url);
+	var json     = await response.json();
 	return json.data;
 }
 
-async function run(){
-  let func = await getPosition()
-  if(func){
-    setInterval(move, 500);
-  }
+function addMarker(bus){
+	var icon = getIcon(bus);
+	var marker = new google.maps.Marker({
+	    position: {
+	    	lat: bus.attributes.latitude, 
+	    	lng: bus.attributes.longitude
+	    },
+	    map: map,
+	    icon: icon,
+	    id: bus.id
+	});
+	markers.push(marker);
 }
-run()
 
+function getIcon(bus){
+	// select icon based on bus direction
+	if (bus.attributes.direction_id === 0) {
+		return './images/red.png';
+	}
+	return './images/blue.png';	
+}
+
+function moveMarker(marker,bus) {
+	// change icon if bus has changed direction
+	var icon = getIcon(bus);
+	marker.setIcon(icon);
+
+	// move icon to new lat/lon
+    marker.setPosition( {
+    	lat: bus.attributes.latitude, 
+    	lng: bus.attributes.longitude
+	});
+}
+
+function getMarker(id){
+	var marker = markers.find(function(item){
+		return item.id === id;
+	});
+	return marker;
+}
+
+window.onload = init;
